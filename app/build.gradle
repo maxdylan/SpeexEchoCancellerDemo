@@ -6,7 +6,7 @@ android {
     defaultConfig {
         applicationId "com.xintu.speexechocanceller"
         minSdkVersion 19
-        targetSdkVersion 25
+        targetSdkVersion 22
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -24,7 +24,7 @@ android {
     }
     externalNativeBuild {
         ndkBuild {
-            path file("src\\main\\cpp\\Android.mk")
+            path file("src/main/cpp/Android.mk")
         }
 //        cmake {
 //            path "CMakeLists.txt"
