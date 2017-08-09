@@ -12,13 +12,14 @@ import android.util.Log;
  * Created by tongchenfei on 2017/8/8.
  */
 
-public class LtPlayer implements Runnable{
-    private LtPlayer(){
+public class LtPlayer implements Runnable {
+    private LtPlayer() {
 
     }
 
     private static LtPlayer instance = new LtPlayer();
-    public static LtPlayer get(){
+
+    public static LtPlayer get() {
         return instance;
     }
 
@@ -26,43 +27,55 @@ public class LtPlayer implements Runnable{
     public boolean isRunning = false;
 
 
-    public void startPlay(){
+    public void startPlay() {
         if (!isRunning) {
             isRunning = true;
             new Thread(this).start();
         }
     }
 
-    public void stopPlay(){
+    public void stopPlay() {
         isRunning = false;
     }
+
+    private Speex speex = new Speex();
 
     @Override
     public void run() {
         Log.d("LtPlayer", "prepare to play: " + isRunning);
-        int playBuff = AudioTrack.getMinBufferSize(Constants.SAMPLE_RATE, AudioFormat
-                .CHANNEL_CONFIGURATION_MONO, AudioFormat.ENCODING_PCM_16BIT);
-        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, Constants.SAMPLE_RATE, AudioFormat
-                .CHANNEL_CONFIGURATION_MONO, AudioFormat.ENCODING_PCM_16BIT, playBuff, AudioTrack
-                .MODE_STREAM);
-        audioTrack.play();
+        int playBuff = AudioTrack.getMinBufferSize(Constants.SAMPLE_RATE,
+                AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
+        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, Constants
+                .SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat
+                .ENCODING_PCM_16BIT, playBuff, AudioTrack.MODE_STREAM);
+//        audioTrack.play();
+        speex.init();
         short[] rawData;
+        byte[] speexEncode;
         while (isRunning) {
             if (RawDataManager.get().canRead()) {
-                rawData = RawDataManager.get().getRawData();
-                Log.d("LtPlayer", "prepare to write: " + RawDataManager.get().rawSize());
-                audioTrack.setStereoVolume(0.7f, 0.7f);
-                audioTrack.write(rawData, 0, playBuff);
-                Log.d("LtPlayer", "audioTrack write: " + rawData.length);
-            }else{
-                try {
-                    Log.e("LtPlayer", "null to sleep");
-                    Thread.sleep(1000);
+//                rawData = RawDataManager.get().getRawData();
 
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                rawData = new short[1024];
+                speexEncode = RawDataManager.get().getSpeexData();
+                int iSize = speex.decode(speexEncode, rawData, speexEncode
+                        .length);
+
+                audioTrack.write(rawData, 0, iSize);
+                audioTrack.play();
+                if (RawDataManager.get().isEchoCancel()) {
+                    RawDataManager.get().addEchoData(rawData, iSize);
                 }
             }
+//            else {
+//                try {
+//                    Log.e("LtPlayer", "null to sleep");
+//                    Thread.sleep(10);
+//
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
         }
         RawDataManager.get().clear();
         audioTrack.stop();

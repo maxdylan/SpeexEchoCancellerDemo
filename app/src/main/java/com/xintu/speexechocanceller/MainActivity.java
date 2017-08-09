@@ -7,6 +7,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
+    private Button echoCancel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -17,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 LtRecorder.get().startRecord();
-//                LtPlayer.get().startPlay();
+                LtPlayer.get().startPlay();
             }
         });
 
@@ -25,12 +26,25 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 LtRecorder.get().stopRecord();
-//                LtPlayer.get().stopPlay();
-                if (LtPlayer.get().isRunning) {
-                    LtPlayer.get().stopPlay();
-                }else{
-                    LtPlayer.get().startPlay();
-                }
+                LtPlayer.get().stopPlay();
+//                if (LtPlayer.get().isRunning) {
+//                    LtPlayer.get().stopPlay();
+//                }else{
+//                    LtPlayer.get().startPlay();
+//                }
+            }
+        });
+
+        echoCancel = (Button) findViewById(R.id.echoCancel);
+        echoCancel.setText("不消除");
+
+        echoCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                RawDataManager.get().setEchoCancel(!RawDataManager.get()
+                        .isEchoCancel());
+                echoCancel.setText(RawDataManager.get().isEchoCancel() ?
+                        "回声消除" : "不消除");
             }
         });
 

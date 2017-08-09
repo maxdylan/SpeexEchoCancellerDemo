@@ -48,15 +48,14 @@ public class Speex {
 
     public native int decode(byte encoded[], short lin[], int size);
 
-    public native int encode(short lin[], int offset, byte encoded[], int
-            size, short echo[], boolean deEcho);
+    public native int encode(short lin[], int offset, byte encoded[], int size);
 
     public native void close();
 
     public native int initSpeexAec(int frameSize, int filterLength, int
             sampleRate);
 
-    public native int speexAec(byte[] record, byte[] play, byte[] aec);
+    public native int speexAec(short[] record, short[] play, short[] aec);
 
     public native int exitSpeexDsp();
 }

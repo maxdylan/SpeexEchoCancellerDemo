@@ -51,16 +51,12 @@ JNIEXPORT jint JNICALL Java_com_xintu_speexechocanceller_Speex_open
 extern "C"
 JNIEXPORT jint Java_com_xintu_speexechocanceller_Speex_encode
         (JNIEnv *env, jobject obj, jshortArray lin, jint offset,
-         jbyteArray encoded, jint size, jshortArray echo,
-         jboolean doEchoCancel) {
+         jbyteArray encoded, jint size) {
 
     jshort buffer[enc_frame_size];
-    jshort echoBuffer[enc_frame_size];
-    jshort doEchoBuffer[enc_frame_size];
     jbyte output_buffer[enc_frame_size];
     int nsamples = (size - 1) / enc_frame_size + 1;
     int i, tot_bytes = 0;
-    unsigned char doEcho = doEchoCancel;
 
     if (!codec_open)
         return 0;
@@ -70,15 +66,8 @@ JNIEXPORT jint Java_com_xintu_speexechocanceller_Speex_encode
     for (i = 0; i < nsamples; i++) {
         env->GetShortArrayRegion(lin, offset + i * enc_frame_size,
                                  enc_frame_size, buffer);
-        if (doEcho) {
-            env->GetShortArrayRegion(echo, 0, enc_frame_size, echoBuffer);
-            speex_echo_cancellation(m_pState, buffer, echoBuffer, doEchoBuffer);
-            speex_preprocess_run(m_pPreprocessorState, doEchoBuffer);
-            speex_encode_int(enc_state, doEchoBuffer, &ebits);
-        } else {
-            speex_preprocess_run(m_pPreprocessorState, buffer);
-            speex_encode_int(enc_state, buffer, &ebits);
-        }
+        speex_preprocess_run(m_pPreprocessorState, buffer);
+        speex_encode_int(enc_state, buffer, &ebits);
     }
     //env->GetShortArrayRegion(lin, offset, enc_frame_size, buffer);
     //speex_encode_int(enc_state, buffer, &ebits);
@@ -190,16 +179,16 @@ Java_com_xintu_speexechocanceller_Speex_initSpeexAec(JNIEnv *env, jobject thiz,
 extern "C"
 JNIEXPORT jint JNICALL
 Java_com_xintu_speexechocanceller_Speex_speexAec(JNIEnv *env, jobject thiz,
-                                                 jbyteArray recordArray,
-                                                 jbyteArray playArray,
-                                                 jbyteArray szOutArray) {
+                                                 jshortArray recordArray,
+                                                 jshortArray playArray,
+                                                 jshortArray szOutArray) {
     if (nInitSuccessFlag == 0)
         return 0;
 
-    jbyte *recordBuffer = env->GetByteArrayElements(
+    jshort *recordBuffer = env->GetShortArrayElements(
             recordArray, 0);
-    jbyte *playBuffer = env->GetByteArrayElements(playArray, 0);
-    jbyte *szOutBuffer = env->GetByteArrayElements(szOutArray, 0);
+    jshort *playBuffer = env->GetShortArrayElements(playArray, 0);
+    jshort *szOutBuffer = env->GetShortArrayElements(szOutArray, 0);
 
     speex_echo_cancellation(m_pState, (spx_int16_t *) recordBuffer,
                             (spx_int16_t *) playBuffer,
@@ -207,9 +196,9 @@ Java_com_xintu_speexechocanceller_Speex_speexAec(JNIEnv *env, jobject thiz,
     int flag = speex_preprocess_run(m_pPreprocessorState,
                                     (spx_int16_t *) szOutBuffer);
 
-    env->ReleaseByteArrayElements(recordArray, recordBuffer, 0);
-    env->ReleaseByteArrayElements(playArray, playBuffer, 0);
-    env->ReleaseByteArrayElements(szOutArray, szOutBuffer, 0);
+    env->ReleaseShortArrayElements(recordArray, recordBuffer, 0);
+    env->ReleaseShortArrayElements(playArray, playBuffer, 0);
+    env->ReleaseShortArrayElements(szOutArray, szOutBuffer, 0);
 
     return 1;
 }
